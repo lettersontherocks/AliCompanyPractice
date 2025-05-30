@@ -17,8 +17,34 @@ export class CompaniesService {
     return this.companyRepo.save(company);
   }
 
-  async findAll() {
-    return this.companyRepo.find();
+  async findAll(
+    page: number,
+    limit: number,
+    sortBy: string,
+    order: 'asc' | 'desc'
+  ) {
+    const skip = (page - 1) * limit;
+
+    const allowedSortFields = ['company_code', 'company_name', 'level', 'country', 'city', 'annual_revenue', 'employees', 'founded_year'];
+    if (!allowedSortFields.includes(sortBy)) {
+      sortBy = 'company_code'; 
+    }
+
+
+    const [data, total] = await this.companyRepo.findAndCount({
+      skip,
+      take: limit,
+      order: {
+        [sortBy]: order,
+      },
+    });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
   
   async update(code: string, dto: UpdateCompanyDto) {
@@ -73,7 +99,29 @@ export class CompaniesService {
       }
     }
 
-    return qb.getMany();
+    const allowedSortFields = [...allowedTextFields, ...numericFields];
+    // 分页
+    const page = query.page ? Number(query.page) : 1;
+    const limit = query.limit ? Number(query.limit) : 10;
+    const skip = (page - 1) * limit;
+
+    // 排序
+    let sortBy = query.sortBy || 'company_code';
+    let order: 'ASC' | 'DESC' = (query.order || 'asc').toUpperCase() as 'ASC' | 'DESC';
+    if (!allowedSortFields.includes(sortBy)) sortBy = 'company_code';
+
+    const [data, total] = await qb
+      .orderBy(`company.${sortBy}`, order)
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   async remove(code: string) {

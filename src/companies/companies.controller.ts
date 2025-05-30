@@ -10,7 +10,7 @@ import {
   import { CompaniesService } from './companies.service';
   import { CreateCompanyDto } from './dto/create-company.dto';
   import { UpdateCompanyDto } from './dto/update-company.dto';
-  import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBody} from '@nestjs/swagger';  
+  import { ApiTags, ApiOperation, ApiParam, ApiQuery, ApiBody, ApiOkResponse} from '@nestjs/swagger';  
   
   @ApiTags('companies') 
   @Controller('companies')
@@ -25,10 +25,32 @@ import {
     }
   
     @ApiOperation({ summary: '获取所有公司' })
-    @ApiBody({ type: UpdateCompanyDto })
+    @ApiQuery({ name: 'page', required: false, type: Number, description: '页码,从1开始' })
+    @ApiQuery({ name: 'limit', required: false, type: Number, description: '每页条数' })
+    @ApiQuery({ name: 'sortBy',
+                required: false,
+                enum: ['company_code', 'company_name', 'level', 'country', 'city', 'annual_revenue', 'employees', 'founded_year'],
+                description: '排序字段' })
+    @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'], description: '升序或降序' })
+    @ApiOkResponse({
+      description: '分页公司列表',
+      schema: {
+        example: {
+          data: [{ company_code: 'C001', company_name: 'Alibaba', level: '1', country: 'China', city: 'Hangzhou', founded_year: 1999, annual_revenue: 1000000000, employees: 100000 }],
+          total: 100,
+          page: 1,
+          limit: 10
+        }
+      }
+    })
     @Get()
-    findAll() {
-      return this.companiesService.findAll();
+    findAll(  
+      @Query('page') page = 1,
+      @Query('limit') limit = 10,
+      @Query('sortBy') sortBy: string = 'company_code',
+      @Query('order') order: 'asc' | 'desc' = 'asc'
+    ) {
+      return this.companiesService.findAll(page, limit, sortBy, order);
     }
 
     @ApiOperation({ summary: '修改字段' })
@@ -52,6 +74,21 @@ import {
     @ApiQuery({ name: 'level', required: false, type: String })
     @ApiQuery({ name: 'country', required: false, type: String })
     @ApiQuery({ name: 'city', required: false, type: String })
+    @ApiQuery({ name: 'page', required: false, type: Number })
+    @ApiQuery({ name: 'limit', required: false, type: Number })
+    @ApiQuery({ name: 'sortBy', required: false, enum: ['company_code', 'company_name', 'level', 'country', 'city', 'annual_revenue', 'employees', 'founded_year'] })
+    @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
+    @ApiOkResponse({
+      description: '分页公司查询结果',
+      schema: {
+        example: {
+          data: [{ company_code: 'C001', company_name: 'Alibaba', level: '1', country: 'China', city: 'Hangzhou', founded_year: 1999, annual_revenue: 1000000000, employees: 100000 }],
+          total: 50,
+          page: 1,
+          limit: 10
+        }
+      }
+    })
     @Get('query')
     query(@Query() query: Record<string, string>) {
       return this.companiesService.queryCompanies(query);

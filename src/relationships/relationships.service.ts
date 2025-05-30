@@ -23,10 +23,33 @@ export class RelationshipsService {
     return this.relRepo.save(relationship);
   }
 
-  async findAll() {
-    return this.relRepo.find();
+  async findAll(
+    page: number,
+    limit: number,
+    sortBy: string,
+    order: 'asc' | 'desc',
+  ) {
+      const skip = (page - 1) * limit;
+      const allowedSortFields = ['company_code', 'parent_company'];
+      if (!allowedSortFields.includes(sortBy)) sortBy = 'company_code';
+
+      const [data, total] = await this.relRepo.findAndCount({
+        skip,
+        take: limit,
+        order: {
+          [sortBy]: order
+        },
+        relations: ['childCompany', 'parentCompany'],
+      });
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+      };
   }
-  
+
   async findParentByCode(code: string) {
   const rel = await this.relRepo.findOneBy({ company_code: code });
 
@@ -37,17 +60,42 @@ export class RelationshipsService {
   return this.companyRepo.findOneBy({ company_code: rel.parent_company });
   }
 
-  async findChildrenByCode(code: string) {
-  const relations = await this.relRepo.findBy({ parent_company: code });
+  async findChildrenByCode(
+    code: string,
+    page: number,
+    limit: number,
+    sortBy: string,
+    order: 'asc' | 'desc',
+  ) {
+    const relations = await this.relRepo.findBy({ parent_company: code });
+    if (relations.length === 0) {
+      return { data: [], total: 0, page, limit };
+    }
 
-  if (relations.length === 0) {
-    return [];
+    const childCodes = relations.map(rel => rel.company_code);
+
+    const allowedSortFields = ['company_code', 'company_name', 'founded_year', 'annual_revenue', 'employees'];
+    if (!allowedSortFields.includes(sortBy)) sortBy = 'company_code';
+    const sortOrder = order.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.companyRepo
+      .createQueryBuilder('company')
+      .where('company.company_code IN (:...codes)', { codes: childCodes })
+      .orderBy(`company.${sortBy}`, sortOrder)
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
-  const childCodes = relations.map(rel => rel.company_code);
-
-  return this.companyRepo.findByIds(childCodes);
-  }
 
 async updateParent(code: string, newParent: string) {
   const relation = await this.relRepo.findOneBy({ company_code: code });
