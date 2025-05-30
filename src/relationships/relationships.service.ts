@@ -38,8 +38,7 @@ export class RelationshipsService {
         take: limit,
         order: {
           [sortBy]: order
-        },
-        relations: ['childCompany', 'parentCompany'],
+        }
       });
 
       return {

@@ -55,7 +55,7 @@ export class RelationshipsController {
     return this.relationshipsService.findParentByCode(code);
   }
 
-  @ApiOperation({ summary: '获取指定母公司对应的所有子公司（分页 + 排序）' })
+  @ApiOperation({ summary: '获取指定母公司对应的所有子公司' })
   @ApiParam({ name: 'code', description: '母公司代码', example: 'C001' })
   @ApiQuery({ name: 'page', required: false, type: Number, description: '页码，从1开始' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: '每页条数' })
