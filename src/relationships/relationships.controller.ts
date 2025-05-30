@@ -76,11 +76,12 @@ export class RelationshipsController {
   @ApiOperation({ summary: '修改某个公司的母公司' })
   @ApiParam({ name: 'code', description: '子公司代码', example: 'C003' })
   @ApiBody({ schema: {
-  type: 'object',
-  properties: {
-    parent_company: { type: 'string', example: 'C001' },
-  },
-}})
+             type: 'object',
+             properties: {
+             parent_company: { type: 'string', example: 'C001' },
+            },
+          },
+        })
   @Patch(':code/parent')
   updateParent(
     @Param('code') code: string,
@@ -95,6 +96,4 @@ export class RelationshipsController {
   removeRelationship(@Param('code') code: string) {
     return this.relationshipsService.removeRelationship(code);
   }
-
-
 }

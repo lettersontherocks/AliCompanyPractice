@@ -48,15 +48,15 @@ export class CompaniesService {
   }
   
   async update(code: string, dto: UpdateCompanyDto) {
-  const company = await this.companyRepo.findOneBy({ company_code: code });
+    const company = await this.companyRepo.findOneBy({ company_code: code });
 
-  if (!company) {
-    throw new BadRequestException(`Company with code ${code} not found.`);
-  }
+    if (!company) {
+      throw new BadRequestException(`Company with code ${code} not found.`);
+    }
 
-  const updated = Object.assign(company, dto);
+    const updated = Object.assign(company, dto);
 
-  return this.companyRepo.save(updated);
+    return this.companyRepo.save(updated);
   }
 
   async queryCompanies(query: Record<string, string>) {
