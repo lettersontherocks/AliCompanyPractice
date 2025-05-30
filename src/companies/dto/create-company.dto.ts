@@ -37,7 +37,7 @@ export class CreateCompanyDto {
   @IsNumber()
   annual_revenue: number;
 
-  @ApiProperty({ example: 500, description: '员工数量' })
+  @ApiProperty({ example: 500, description: '员工人数' })
   @IsInt()
   employees: number;
 }

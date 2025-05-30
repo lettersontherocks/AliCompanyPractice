@@ -33,6 +33,7 @@ import {
 
     @ApiOperation({ summary: '修改字段' })
     @ApiParam({ name: 'code', description: '公司代码' })
+    @ApiBody({ type: UpdateCompanyDto })
     @Patch(':code')
     update(
       @Param('code') code: string,
