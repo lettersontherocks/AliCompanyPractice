@@ -133,5 +133,46 @@ export class CompaniesService {
 
     return this.companyRepo.remove(company);
   }
-  
+
+  async getCompanyStats(query: Record<string, string | string[]>) {
+    const qb = this.companyRepo.createQueryBuilder('company');
+
+    const allowedDims = ['company_code', 'company_name', 'level', 'country', 'city'];
+    const numericFields = ['founded_year', 'annual_revenue', 'employees'];
+
+    // dimension
+    const dimensionsRaw = query.dimension;
+    const dimensions: string[] = Array.isArray(dimensionsRaw) ? dimensionsRaw : [dimensionsRaw];
+    const validDims = dimensions.filter(dim => allowedDims.includes(dim));
+
+    if (validDims.length === 0) {
+      throw new Error('至少提供一个合法的 dimension 参数');
+    }
+
+    qb.select(validDims.map(d => `company.${d}`));
+    qb.addSelect('COUNT(*)', 'count');
+    validDims.forEach(dim => qb.addGroupBy(`company.${dim}`));
+
+    // filter
+    for (const field of numericFields) {
+      const minKey = `${field}_min`;
+      const maxKey = `${field}_max`;
+
+      if (query[minKey]) {
+        qb.andWhere(`company.${field} >= :${minKey}`, { [minKey]: Number(query[minKey]) });
+      }
+      if (query[maxKey]) {
+        qb.andWhere(`company.${field} <= :${maxKey}`, { [maxKey]: Number(query[maxKey]) });
+      }
+    }
+    
+    const textFilters = ['country', 'city', 'level'];
+    for (const field of textFilters) {
+      if (query[field]) {
+        qb.andWhere(`company.${field} = :${field}`, { [field]: query[field] });
+      }
+    }
+
+    return qb.getRawMany();
+  }
 }

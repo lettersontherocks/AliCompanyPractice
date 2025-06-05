@@ -100,7 +100,32 @@ import {
     remove(@Param('code') code: string) {
       return this.companiesService.remove(code);
     }
+    
 
+    @ApiOperation({ summary: '按维度统计公司数量' })
+    @ApiQuery({ name: 'dimension', required: true, type: [String], description: '维度字段 level, country ' })
+    @ApiQuery({ name: 'founded_year_min', required: false, type: Number })
+    @ApiQuery({ name: 'founded_year_max', required: false, type: Number })
+    @ApiQuery({ name: 'annual_revenue_min', required: false, type: Number })
+    @ApiQuery({ name: 'annual_revenue_max', required: false, type: Number })
+    @ApiQuery({ name: 'employees_min', required: false, type: Number })
+    @ApiQuery({ name: 'employees_max', required: false, type: Number })
+    @ApiQuery({ name: 'country', required: false, type: String })
+    @ApiQuery({ name: 'city', required: false, type: String })
+    @ApiQuery({ name: 'level', required: false, type: String })
+    @ApiOkResponse({
+      description: '公司维度聚合结果',
+      schema: {
+        example: [
+          { country: 'China', level: '1', count: 5 },
+          { country: 'USA', level: '2', count: 3 },
+        ],
+      },
+    })
+    @Get('stats')
+    getCompanyStats(@Query() query: Record<string, string | string[]>) {
+      return this.companiesService.getCompanyStats(query);
+    }
 
   }
   
